@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Time 💚</title>
+<style>
+  :root{
+    --bg:#0a0d0b;
+    --green:#2fd47a;
+    --green-dark:#189a58;
+    --cream:#f7f7f2;
+    --dim:#93a099;
+    --danger:#ff5c5c;
+    --card:#12160f;
+    --orange:#ff8a3d;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; min-height:100vh;
+    background: var(--bg);
+    font-family:'Trebuchet MS','Segoe UI',sans-serif;
+    color: var(--cream);
+    overflow-x:hidden;
+  }
+  .wrap{ max-width:540px; margin:0 auto; padding:0 20px 60px; min-height:100vh; display:flex; flex-direction:column; position:relative; z-index:1; }
+
+  /* ---------- bandeau vert type "modèle" ---------- */
+  .hero{
+    position:relative; margin:0 -20px 26px; padding:34px 24px 46px;
+    background: var(--green);
+    border-radius:0 0 34px 34px;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:""; position:absolute; top:-60px; right:-60px; width:200px; height:200px;
+    background: var(--bg); border-radius:50%;
+  }
+  .hero::after{
+    content:""; position:absolute; bottom:-90px; left:-40px; width:220px; height:220px;
+    background: rgba(0,0,0,0.12); border-radius:50%;
+  }
+  .doodle{ position:absolute; font-size:22px; color:var(--orange); font-weight:900; z-index:2; }
+  .d1{ top:14px; right:70px; transform:rotate(-8deg); }
+  .d2{ top:46px; right:34px; font-size:30px; transform:rotate(10deg); }
+  .d3{ top:20px; left:20px; color:#06180f; opacity:.5; font-size:18px; }
+
+  .hero h1{
+    font-size:46px; font-weight:900; letter-spacing:-1px; margin:0 0 4px;
+    color:#06180f; text-transform:uppercase; line-height:0.95; position:relative; z-index:3;
+  }
+  .hero .sub{ color:#06180f; opacity:.75; font-weight:700; font-size:14px; position:relative; z-index:3; }
+
+  /* ---------- écrans ---------- */
+  .screen{ display:none; flex-direction:column; flex:1; }
+  .screen.active{ display:flex; animation: fadeUp .45s ease; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
+
+  label{ font-size:13px; font-weight:800; color:var(--green); text-transform:uppercase; letter-spacing:.05em; margin:18px 0 8px; display:block; }
+  input[type="text"], input[type="email"], textarea{
+    width:100%; background:var(--card); border:2px solid rgba(255,255,255,0.08);
+    border-radius:12px; padding:13px 14px; color:var(--cream); font-size:15px;
+    font-family:inherit; resize:vertical;
+  }
+  input:focus, textarea:focus{ outline:none; border-color:var(--green); }
+  ::placeholder{ color: var(--dim); }
+
+  .q-row{ display:flex; gap:8px; align-items:flex-start; margin-bottom:10px; }
+  .q-row textarea{ flex:1; min-height:46px; }
+  .remove-q{
+    background:rgba(255,92,92,0.12); border:2px solid rgba(255,92,92,0.3); color:var(--danger);
+    border-radius:10px; width:44px; height:46px; font-size:18px; cursor:pointer; flex-shrink:0;
+  }
+  .add-q{
+    background:transparent; border:2px dashed rgba(53,208,127,0.4); color:var(--green);
+    border-radius:12px; padding:12px; font-weight:800; cursor:pointer; margin-top:4px;
+  }
+
+  .primary-btn{
+    margin-top:26px; background:var(--green); color:#06180f; border:none; border-radius:14px;
+    font-size:17px; font-weight:900; padding:17px; cursor:pointer;
+    box-shadow:0 8px 0 var(--green-dark); transition:transform .08s ease;
+  }
+  .primary-btn:active{ transform:translateY(5px); box-shadow:0 3px 0 var(--green-dark); }
+  .primary-btn:disabled{ opacity:.4; box-shadow:none; }
+
+  .info-banner{
+    background:var(--card); border:1px solid rgba(53,208,127,0.2); border-radius:14px;
+    padding:14px 16px; font-size:13.5px; color:var(--dim); line-height:1.5; margin-top:20px;
+  }
+  .info-banner b{ color:var(--cream); }
+
+  .link-box{
+    background:var(--card); border:2px solid var(--green); border-radius:14px;
+    padding:16px; word-break:break-all; font-size:13.5px; color:var(--green); margin:18px 0 10px;
+    font-family: monospace;
+  }
+  .copy-btn{
+    background:transparent; border:2px solid var(--green); color:var(--green);
+    border-radius:12px; padding:13px; font-weight:800; cursor:pointer; width:100%;
+  }
+
+  /* ---------- écran question (mode joueur) ---------- */
+  .qtop{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .qcount{ font-size:13px; color:var(--dim); font-weight:800; letter-spacing:.04em; }
+  .timer{
+    width:44px; height:44px; border-radius:50%; border:4px solid rgba(53,208,127,0.25);
+    display:flex; align-items:center; justify-content:center; font-weight:900; font-size:15px; color:var(--green);
+  }
+  .timer.warn{ border-color:rgba(255,92,92,0.4); color:var(--danger); }
+  .progress-bar{ width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:100px; overflow:hidden; margin-bottom:24px; }
+  .progress-fill{ height:100%; background:var(--green); border-radius:100px; transition:width .3s linear; }
+
+  .green-box{
+    background:var(--green); border-radius:16px; padding:20px; margin-bottom:20px;
+  }
+  .green-box p{ margin:0; font-size:20px; font-weight:900; color:#06180f; line-height:1.3; }
+
+  .answer-box textarea{ min-height:90px; font-size:16px; }
+
+  .nav-row{ display:flex; gap:10px; margin-top:16px; }
+  .secondary-btn{
+    flex:1; background:transparent; border:2px solid rgba(255,255,255,0.15); color:var(--cream);
+    border-radius:12px; padding:14px; font-weight:800; cursor:pointer;
+  }
+
+  /* ---------- récap avant envoi ---------- */
+  .recap-item{ background:var(--card); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+  .recap-q{ font-size:13px; font-weight:800; color:var(--green); margin-bottom:4px; }
+  .recap-a{ font-size:15px; color:var(--cream); }
+  .recap-a.empty{ color:var(--dim); font-style:italic; }
+
+  /* ---------- écran final ---------- */
+  .result-emoji{ font-size:60px; text-align:center; margin-bottom:10px; }
+  .result-title{ font-size:26px; font-weight:900; text-align:center; margin:0 0 8px; }
+  .result-sub{ color:var(--dim); text-align:center; font-size:15px; }
+
+  .hearts{ position:fixed; inset:0; pointer-events:none; z-index:5; overflow:hidden; }
+  .heart{ position:absolute; bottom:-40px; font-size:22px; opacity:.9; animation: floatUp linear forwards; }
+  @keyframes floatUp{ to{ transform: translateY(-110vh) rotate(25deg); opacity:0; } }
+
+  .spinner{
+    width:34px; height:34px; border:4px solid rgba(53,208,127,0.2); border-top-color:var(--green);
+    border-radius:50%; margin:20px auto; animation: spin .8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="hearts" id="hearts"></div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <span class="doodle d1">?</span>
+    <span class="doodle d2">?</span>
+    <span class="doodle d3">✦</span>
+    <h1>Quiz<br>Time</h1>
+    <div class="sub" id="heroSub">Crée ton propre quiz et reçois les réponses par mail</div>
+  </div>
+
+  <!-- ===================== MODE CRÉATION ===================== -->
+  <div class="screen" id="screen-build">
+    <label>Ton adresse email (pour recevoir les réponses)</label>
+    <input type="email" id="buildEmail" placeholder="toi@exemple.com">
+
+    <label>Titre du quiz</label>
+    <input type="text" id="buildTitle" placeholder="Ex : Quiz spécial nous deux">
+
+    <label>Tes questions</label>
+    <div id="questionsList"></div>
+    <button class="add-q" id="addQBtn">+ Ajouter une question</button>
+
+    <button class="primary-btn" id="generateBtn">Générer le lien à partager →</button>
+
+    <div class="info-banner">
+      ⚠️ <b>À savoir :</b> les réponses partent par mail via FormSubmit. La toute première fois que quelqu'un enverra ses réponses, tu recevras un mail de confirmation à l'adresse indiquée ci-dessus — clique sur le lien qu'il contient pour activer la réception (à faire une seule fois par adresse).
+    </div>
+  </div>
+
+  <!-- ===================== ÉCRAN LIEN GÉNÉRÉ ===================== -->
+  <div class="screen" id="screen-link">
+    <p style="font-size:16px; font-weight:800; margin-top:0;">Ton quiz est prêt 🎉</p>
+    <p style="color:var(--dim); font-size:14px;">Partage ce lien avec la ou les personnes que tu veux. Toutes les réponses arriveront sur ton adresse mail.</p>
+    <div class="link-box" id="generatedLink"></div>
+    <button class="copy-btn" id="copyBtn">Copier le lien</button>
+    <button class="primary-btn" id="backToBuildBtn" style="background:transparent; color:var(--green); box-shadow:none; border:2px solid var(--green);">Créer un autre quiz</button>
+  </div>
+
+  <!-- ===================== MODE JOUEUR : intro ===================== -->
+  <div class="screen" id="screen-intro">
+    <p class="result-sub" id="introText" style="text-align:left; font-size:15px;"></p>
+    <div class="info-banner">⏱️ 10 secondes par question — réponds avec tes propres mots, on n'attend pas la perfection 😄</div>
+    <button class="primary-btn" id="playStartBtn">Commencer →</button>
+  </div>
+
+  <!-- ===================== MODE JOUEUR : question ===================== -->
+  <div class="screen" id="screen-play">
+    <div class="qtop">
+      <span class="qcount" id="qCount">Question 1</span>
+      <div class="timer" id="timer">10</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:100%"></div></div>
+    <div class="green-box"><p id="qText"></p></div>
+    <div class="answer-box">
+      <textarea id="answerInput" placeholder="Écris ta réponse ici..."></textarea>
+    </div>
+    <div class="nav-row">
+      <button class="secondary-btn" id="prevBtn">← Précédent</button>
+      <button class="primary-btn" id="nextBtn" style="margin-top:0; flex:2;">Suivant →</button>
+    </div>
+  </div>
+
+  <!-- ===================== RÉCAP AVANT ENVOI ===================== -->
+  <div class="screen" id="screen-recap">
+    <p style="font-weight:800; font-size:17px; margin-top:0;">Vérifie tes réponses</p>
+    <div id="recapList"></div>
+    <button class="primary-btn" id="sendBtn">Envoyer mes réponses →</button>
+  </div>
+
+  <!-- ===================== ENVOI EN COURS ===================== -->
+  <div class="screen" id="screen-sending">
+    <div class="spinner"></div>
+    <p style="text-align:center; color:var(--dim);">Envoi de tes réponses...</p>
+  </div>
+
+  <!-- ===================== ÉCRAN FINAL ===================== -->
+  <div class="screen" id="screen-done">
+    <div class="result-emoji">💚</div>
+    <h1 class="result-title">Réponses envoyées !</h1>
+    <p class="result-sub">Merci d'avoir joué le jeu jusqu'au bout 🙃</p>
+  </div>
+
+  <div class="screen" id="screen-error">
+    <div class="result-emoji">😕</div>
+    <h1 class="result-title">Petit souci d'envoi</h1>
+    <p class="result-sub" id="errorMsg">L'envoi n'a pas fonctionné. Vérifie ta connexion et réessaie.</p>
+    <button class="primary-btn" id="retryBtn">Réessayer</button>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   OUTIL "QUIZ TIME" — deux modes dans le même fichier :
+   1) MODE CRÉATION : si l'URL n'a pas de paramètre ?data=
+      -> on affiche le formulaire de création de quiz
+   2) MODE JOUEUR : si l'URL contient ?data=xxxx
+      -> on décode les questions + l'email, on lance le quiz
+   ========================================================= */
+
+const screens = {};
+['build','link','intro','play','recap','sending','done','error'].forEach(id => {
+  screens[id] = document.getElementById('screen-' + id);
+});
+function showScreen(name){
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
+
+// ---------- Encodage / décodage des données dans l'URL ----------
+function encodeData(obj){
+  return btoa(encodeURIComponent(JSON.stringify(obj)));
+}
+function decodeData(str){
+  try{
+    return JSON.parse(decodeURIComponent(atob(str)));
+  }catch(e){
+    return null;
+  }
+}
+
+const params = new URLSearchParams(window.location.search);
+const rawData = params.get('data');
+const quizData = rawData ? decodeData(rawData) : null;
+
+if(quizData && quizData.email && Array.isArray(quizData.questions) && quizData.questions.length){
+  initPlayerMode(quizData);
+} else {
+  initBuilderMode();
+}
+
+/* =========================================================
+   MODE CRÉATION
+   ========================================================= */
+function initBuilderMode(){
+  document.getElementById('heroSub').textContent = "Crée ton propre quiz et reçois les réponses par mail";
+  showScreen('build');
+
+  const questionsList = document.getElementById('questionsList');
+  let qCounter = 0;
+
+  function addQuestionField(value){
+    qCounter++;
+    const row = document.createElement('div');
+    row.className = 'q-row';
+    row.innerHTML = `
+      <textarea placeholder="Question ${qCounter}...">${value || ''}</textarea>
+      <button class="remove-q" type="button">✕</button>
+    `;
+    row.querySelector('.remove-q').addEventListener('click', () => {
+      row.remove();
+    });
+    questionsList.appendChild(row);
+  }
+
+  // 3 questions vides par défaut pour donner l'idée
+  addQuestionField('');
+  addQuestionField('');
+  addQuestionField('');
+
+  document.getElementById('addQBtn').addEventListener('click', () => addQuestionField(''));
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    const email = document.getElementById('buildEmail').value.trim();
+    const title = document.getElementById('buildTitle').value.trim() || 'Quiz Time';
+    const questionTexts = Array.from(questionsList.querySelectorAll('textarea'))
+      .map(t => t.value.trim())
+      .filter(t => t.length > 0);
+
+    if(!email || !email.includes('@')){
+      alert('Merci de renseigner une adresse email valide.');
+      return;
+    }
+    if(questionTexts.length === 0){
+      alert('Ajoute au moins une question.');
+      return;
+    }
+
+    const data = { email, title, questions: questionTexts };
+    const encoded = encodeData(data);
+    const url = window.location.origin + window.location.pathname + '?data=' + encoded;
+
+    document.getElementById('generatedLink').textContent = url;
+    showScreen('link');
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const link = document.getElementById('generatedLink').textContent;
+    navigator.clipboard.writeText(link).then(() => {
+      const btn = document.getElementById('copyBtn');
+      const original = btn.textContent;
+      btn.textContent = 'Copié ✓';
+      setTimeout(() => btn.textContent = original, 1800);
+    });
+  });
+
+  document.getElementById('backToBuildBtn').addEventListener('click', () => {
+    showScreen('build');
+  });
+}
+
+/* =========================================================
+   MODE JOUEUR
+   ========================================================= */
+function initPlayerMode(data){
+  document.getElementById('heroSub').textContent = data.title;
+
+  let current = 0;
+  let timeLeft = 10;
+  let timerInterval = null;
+  const answers = new Array(data.questions.length).fill('');
+
+  document.getElementById('introText').textContent =
+    `${data.questions.length} question${data.questions.length > 1 ? 's' : ''} t'attendent. Réponds à ton rythme (enfin... presque, il y a un chrono 😏), tes réponses partiront directement par mail à la fin.`;
+
+  showScreen('intro');
+
+  document.getElementById('playStartBtn').addEventListener('click', () => {
+    current = 0;
+    showScreen('play');
+    loadQuestion();
+  });
+
+  function loadQuestion(){
+    const q = data.questions[current];
+    document.getElementById('qCount').textContent = `Question ${current + 1}/${data.questions.length}`;
+    document.getElementById('qText').textContent = q;
+    document.getElementById('answerInput').value = answers[current] || '';
+    document.getElementById('prevBtn').style.visibility = current === 0 ? 'hidden' : 'visible';
+    document.getElementById('nextBtn').textContent = (current === data.questions.length - 1) ? 'Terminer →' : 'Suivant →';
+    startTimer();
+  }
+
+  function startTimer(){
+    clearInterval(timerInterval);
+    timeLeft = 10;
+    const timerEl = document.getElementById('timer');
+    const fillEl = document.getElementById('progressFill');
+    timerEl.textContent = timeLeft;
+    timerEl.classList.remove('warn');
+    fillEl.style.width = '100%';
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerEl.textContent = timeLeft;
+      fillEl.style.width = (timeLeft / 10 * 100) + '%';
+      if(timeLeft <= 3) timerEl.classList.add('warn');
+      if(timeLeft <= 0){
+        clearInterval(timerInterval);
+        goNext();
+      }
+    }, 1000);
+  }
+
+  function saveCurrentAnswer(){
+    answers[current] = document.getElementById('answerInput').value.trim();
+  }
+
+  function goNext(){
+    saveCurrentAnswer();
+    clearInterval(timerInterval);
+    if(current < data.questions.length - 1){
+      current++;
+      loadQuestion();
+    } else {
+      showRecap();
+    }
+  }
+
+  function goPrev(){
+    saveCurrentAnswer();
+    clearInterval(timerInterval);
+    if(current > 0){
+      current--;
+      loadQuestion();
+    }
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', goNext);
+  document.getElementById('prevBtn').addEventListener('click', goPrev);
+
+  function showRecap(){
+    showScreen('recap');
+    const list = document.getElementById('recapList');
+    list.innerHTML = '';
+    data.questions.forEach((q, i) => {
+      const item = document.createElement('div');
+      item.className = 'recap-item';
+      const a = answers[i];
+      item.innerHTML = `
+        <div class="recap-q">${q}</div>
+        <div class="recap-a ${a ? '' : 'empty'}">${a || '(pas de réponse)'}</div>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  document.getElementById('sendBtn').addEventListener('click', sendAnswers);
+  document.getElementById('retryBtn').addEventListener('click', sendAnswers);
+
+  function sendAnswers(){
+    showScreen('sending');
+
+    const payload = { _subject: `💌 Réponses au quiz : ${data.title}` };
+    data.questions.forEach((q, i) => {
+      payload[`Question ${i + 1} — ${q}`] = answers[i] || '(pas de réponse)';
+    });
+
+    fetch(`https://formsubmit.co/ajax/${encodeURIComponent(data.email)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(res => {
+        if(!res.ok) throw new Error('Réponse serveur invalide');
+        return res.json();
+      })
+      .then(() => {
+        showScreen('done');
+        launchHearts();
+      })
+      .catch(() => {
+        showScreen('error');
+      });
+  }
+}
+
+function launchHearts(){
+  const container = document.getElementById('hearts');
+  const symbols = ['💚','💛','❤️','💗'];
+  for(let i = 0; i < 26; i++){
+    setTimeout(() => {
+      const h = document.createElement('div');
+      h.className = 'heart';
+      h.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+      h.style.left = Math.random() * 100 + 'vw';
+      h.style.fontSize = (16 + Math.random() * 18) + 'px';
+      h.style.animationDuration = (3 + Math.random() * 2.5) + 's';
+      container.appendChild(h);
+      setTimeout(() => h.remove(), 6000);
+    }, i * 90);
+  }
+}
+</script>
+
+</body>
+</html>
