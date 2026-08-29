@@ -25,7 +25,6 @@
   }
   .wrap{ max-width:540px; margin:0 auto; padding:0 20px 60px; min-height:100vh; display:flex; flex-direction:column; position:relative; z-index:1; }
 
-  /* ---------- bandeau vert type "modèle" ---------- */
   .hero{
     position:relative; margin:0 -20px 26px; padding:34px 24px 46px;
     background: var(--green);
@@ -51,18 +50,18 @@
   }
   .hero .sub{ color:#06180f; opacity:.75; font-weight:700; font-size:14px; position:relative; z-index:3; }
 
-  /* ---------- écrans ---------- */
   .screen{ display:none; flex-direction:column; flex:1; }
   .screen.active{ display:flex; animation: fadeUp .45s ease; }
   @keyframes fadeUp{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
 
   label{ font-size:13px; font-weight:800; color:var(--green); text-transform:uppercase; letter-spacing:.05em; margin:18px 0 8px; display:block; }
-  input[type="text"], input[type="email"], textarea{
+  input[type="text"], input[type="email"], textarea, select{
     width:100%; background:var(--card); border:2px solid rgba(255,255,255,0.08);
     border-radius:12px; padding:13px 14px; color:var(--cream); font-size:15px;
     font-family:inherit; resize:vertical;
   }
-  input:focus, textarea:focus{ outline:none; border-color:var(--green); }
+  select{ appearance:none; -webkit-appearance:none; }
+  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--green); }
   ::placeholder{ color: var(--dim); }
 
   .q-row{ display:flex; gap:8px; align-items:flex-start; margin-bottom:10px; }
@@ -100,7 +99,6 @@
     border-radius:12px; padding:13px; font-weight:800; cursor:pointer; width:100%;
   }
 
-  /* ---------- écran question (mode joueur) ---------- */
   .qtop{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
   .qcount{ font-size:13px; color:var(--dim); font-weight:800; letter-spacing:.04em; }
   .timer{
@@ -124,13 +122,11 @@
     border-radius:12px; padding:14px; font-weight:800; cursor:pointer;
   }
 
-  /* ---------- récap avant envoi ---------- */
   .recap-item{ background:var(--card); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
   .recap-q{ font-size:13px; font-weight:800; color:var(--green); margin-bottom:4px; }
   .recap-a{ font-size:15px; color:var(--cream); }
   .recap-a.empty{ color:var(--dim); font-style:italic; }
 
-  /* ---------- écran final ---------- */
   .result-emoji{ font-size:60px; text-align:center; margin-bottom:10px; }
   .result-title{ font-size:26px; font-weight:900; text-align:center; margin:0 0 8px; }
   .result-sub{ color:var(--dim); text-align:center; font-size:15px; }
@@ -160,13 +156,20 @@
     <div class="sub" id="heroSub">Crée ton propre quiz et reçois les réponses par mail</div>
   </div>
 
-  <!-- ===================== MODE CRÉATION ===================== -->
   <div class="screen" id="screen-build">
     <label>Ton adresse email (pour recevoir les réponses)</label>
     <input type="email" id="buildEmail" placeholder="toi@exemple.com">
 
     <label>Titre du quiz</label>
     <input type="text" id="buildTitle" placeholder="Ex : Quiz spécial nous deux">
+
+    <label>Temps par question</label>
+    <select id="buildDuration">
+      <option value="10">10 secondes</option>
+      <option value="15">15 secondes</option>
+      <option value="20">20 secondes</option>
+      <option value="30">30 secondes</option>
+    </select>
 
     <label>Tes questions</label>
     <div id="questionsList"></div>
@@ -179,7 +182,6 @@
     </div>
   </div>
 
-  <!-- ===================== ÉCRAN LIEN GÉNÉRÉ ===================== -->
   <div class="screen" id="screen-link">
     <p style="font-size:16px; font-weight:800; margin-top:0;">Ton quiz est prêt 🎉</p>
     <p style="color:var(--dim); font-size:14px;">Partage ce lien avec la ou les personnes que tu veux. Toutes les réponses arriveront sur ton adresse mail.</p>
@@ -188,14 +190,12 @@
     <button class="primary-btn" id="backToBuildBtn" style="background:transparent; color:var(--green); box-shadow:none; border:2px solid var(--green);">Créer un autre quiz</button>
   </div>
 
-  <!-- ===================== MODE JOUEUR : intro ===================== -->
   <div class="screen" id="screen-intro">
     <p class="result-sub" id="introText" style="text-align:left; font-size:15px;"></p>
-    <div class="info-banner">⏱️ 10 secondes par question — réponds avec tes propres mots, on n'attend pas la perfection 😄</div>
+    <div class="info-banner" id="introDurationBanner">⏱️ Réponds avec tes propres mots, on n'attend pas la perfection 😄</div>
     <button class="primary-btn" id="playStartBtn">Commencer →</button>
   </div>
 
-  <!-- ===================== MODE JOUEUR : question ===================== -->
   <div class="screen" id="screen-play">
     <div class="qtop">
       <span class="qcount" id="qCount">Question 1</span>
@@ -212,24 +212,22 @@
     </div>
   </div>
 
-  <!-- ===================== RÉCAP AVANT ENVOI ===================== -->
   <div class="screen" id="screen-recap">
     <p style="font-weight:800; font-size:17px; margin-top:0;">Vérifie tes réponses</p>
     <div id="recapList"></div>
     <button class="primary-btn" id="sendBtn">Envoyer mes réponses →</button>
   </div>
 
-  <!-- ===================== ENVOI EN COURS ===================== -->
   <div class="screen" id="screen-sending">
     <div class="spinner"></div>
     <p style="text-align:center; color:var(--dim);">Envoi de tes réponses...</p>
   </div>
 
-  <!-- ===================== ÉCRAN FINAL ===================== -->
   <div class="screen" id="screen-done">
     <div class="result-emoji">💚</div>
     <h1 class="result-title">Réponses envoyées !</h1>
     <p class="result-sub">Merci d'avoir joué le jeu jusqu'au bout 🙃</p>
+    <button class="primary-btn" id="makeOwnQuizBtn">Créer mon propre quiz →</button>
   </div>
 
   <div class="screen" id="screen-error">
@@ -242,14 +240,6 @@
 </div>
 
 <script>
-/* =========================================================
-   OUTIL "QUIZ TIME" — deux modes dans le même fichier :
-   1) MODE CRÉATION : si l'URL n'a pas de paramètre ?data=
-      -> on affiche le formulaire de création de quiz
-   2) MODE JOUEUR : si l'URL contient ?data=xxxx
-      -> on décode les questions + l'email, on lance le quiz
-   ========================================================= */
-
 const screens = {};
 ['build','link','intro','play','recap','sending','done','error'].forEach(id => {
   screens[id] = document.getElementById('screen-' + id);
@@ -259,7 +249,6 @@ function showScreen(name){
   screens[name].classList.add('active');
 }
 
-// ---------- Encodage / décodage des données dans l'URL ----------
 function encodeData(obj){
   return btoa(encodeURIComponent(JSON.stringify(obj)));
 }
@@ -281,9 +270,6 @@ if(quizData && quizData.email && Array.isArray(quizData.questions) && quizData.q
   initBuilderMode();
 }
 
-/* =========================================================
-   MODE CRÉATION
-   ========================================================= */
 function initBuilderMode(){
   document.getElementById('heroSub').textContent = "Crée ton propre quiz et reçois les réponses par mail";
   showScreen('build');
@@ -305,7 +291,6 @@ function initBuilderMode(){
     questionsList.appendChild(row);
   }
 
-  // 3 questions vides par défaut pour donner l'idée
   addQuestionField('');
   addQuestionField('');
   addQuestionField('');
@@ -328,7 +313,9 @@ function initBuilderMode(){
       return;
     }
 
-    const data = { email, title, questions: questionTexts };
+    const durationSeconds = parseInt(document.getElementById('buildDuration').value, 10) || 10;
+
+    const data = { email, title, duration: durationSeconds, questions: questionTexts };
     const encoded = encodeData(data);
     const url = window.location.origin + window.location.pathname + '?data=' + encoded;
 
@@ -351,16 +338,17 @@ function initBuilderMode(){
   });
 }
 
-/* =========================================================
-   MODE JOUEUR
-   ========================================================= */
 function initPlayerMode(data){
   document.getElementById('heroSub').textContent = data.title;
 
   let current = 0;
-  let timeLeft = 10;
+  let timeLeft = data.duration || 10;
+  const questionDuration = data.duration || 10;
   let timerInterval = null;
   const answers = new Array(data.questions.length).fill('');
+
+  document.getElementById('introDurationBanner').textContent =
+    `⏱️ ${questionDuration} secondes par question — réponds avec tes propres mots, on n'attend pas la perfection 😄`;
 
   document.getElementById('introText').textContent =
     `${data.questions.length} question${data.questions.length > 1 ? 's' : ''} t'attendent. Réponds à ton rythme (enfin... presque, il y a un chrono 😏), tes réponses partiront directement par mail à la fin.`;
@@ -385,7 +373,7 @@ function initPlayerMode(data){
 
   function startTimer(){
     clearInterval(timerInterval);
-    timeLeft = 10;
+    timeLeft = questionDuration;
     const timerEl = document.getElementById('timer');
     const fillEl = document.getElementById('progressFill');
     timerEl.textContent = timeLeft;
@@ -395,7 +383,7 @@ function initPlayerMode(data){
     timerInterval = setInterval(() => {
       timeLeft--;
       timerEl.textContent = timeLeft;
-      fillEl.style.width = (timeLeft / 10 * 100) + '%';
+      fillEl.style.width = (timeLeft / questionDuration * 100) + '%';
       if(timeLeft <= 3) timerEl.classList.add('warn');
       if(timeLeft <= 0){
         clearInterval(timerInterval);
@@ -470,6 +458,9 @@ function initPlayerMode(data){
       .then(() => {
         showScreen('done');
         launchHearts();
+        document.getElementById('makeOwnQuizBtn').addEventListener('click', () => {
+          window.location.href = window.location.origin + window.location.pathname;
+        });
       })
       .catch(() => {
         showScreen('error');
